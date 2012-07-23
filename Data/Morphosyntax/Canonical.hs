@@ -8,13 +8,8 @@ module Data.Morphosyntax.Canonical
 
 import qualified Data.Text.Lazy as L
 
-import Data.Morphosyntax.Tagset (Tag)
-
-data Space
-    = NoSpace
-    | Space
-    | NewLine
-    deriving (Show, Read, Eq, Ord)
+import Data.Morphosyntax.Base
+import qualified Data.Morphosyntax.Class as C
 
 data Word = Word
     { orth    :: L.Text
@@ -22,10 +17,7 @@ data Word = Word
     , interps :: [Interp] }
     deriving (Show, Read, Eq, Ord)
 
-data Interp = Interp
-    { base :: L.Text
-    , tag  :: Tag }
-    deriving (Show, Read, Eq, Ord)
-
-type Disamb = Interp
-type Multi  = [(Interp, Double)]    -- ^ Interpretations with probabilities
+instance C.Morph Word where
+    orth    = orth
+    space   = space
+    interps = interps

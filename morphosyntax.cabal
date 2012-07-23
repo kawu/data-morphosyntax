@@ -6,7 +6,8 @@ License-file:       LICENSE
 Author:             Jakub Waszczuk
 Maintainer:         waszczuk.kuba@gmail.com
 Build-type:         Simple
-Exposed-modules:    Data.Morphosyntax.Canonical
+Exposed-modules:    Data.Morphosyntax.Base
+                    Data.Morphosyntax.Canonical
 		    Data.Morphosyntax.Class
 		    Data.Morphosyntax.Raw
 		    Data.Morphosyntax.Tagset

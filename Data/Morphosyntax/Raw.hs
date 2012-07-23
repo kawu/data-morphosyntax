@@ -2,6 +2,9 @@ module Data.Morphosyntax.Raw
 ( Word (..)
 , Interp (..)
 , Disamb
+, toCano
+, toCanoSent
+, toCanoData
 ) where
 
 import qualified Data.Text.Lazy as L
@@ -29,3 +32,9 @@ toCano tagset x =
   where
     xs = [ C.Interp (base x) (parseTag tagset $ tag x)
          | x <- interps x ]
+
+toCanoSent :: Tagset -> [Word] -> [C.Word]
+toCanoSent tagset = map (toCano tagset)
+
+toCanoData :: Tagset -> [[Word]] -> [[C.Word]]
+toCanoData tagset = map (toCanoSent tagset)

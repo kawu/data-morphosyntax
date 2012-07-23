@@ -61,11 +61,11 @@ ident = many1 $ oneOf $ ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9'] ++ "."
 
 secName name = char '[' *> string name *> char ']'
 
-parseTagset :: String -> String -> IO Tagset
+parseTagset :: String -> String -> Tagset
 parseTagset src contents = do
     case parse tagsetFile src filtered of
-        Left e  -> fail $ "Error parsing input:\n" ++ show e
-        Right r -> return r
+        Left e  -> error $ "Error parsing input:\n" ++ show e
+        Right r -> r
   where
      filtered = unlines $ map (removeComment '#') $ lines contents
 

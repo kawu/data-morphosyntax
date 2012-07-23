@@ -7,7 +7,7 @@ module Data.Morphosyntax.Class
 import Control.Applicative
 import qualified Data.Text.Lazy as L
 
-import Data.Morphosyntax.Canonical (Interp, Multi, Space)
+import Data.Morphosyntax.Base (Interp, Multi, Space)
 
 -- | TODO: Should it provide toCano and fromCano functions?
 class Morph w where
