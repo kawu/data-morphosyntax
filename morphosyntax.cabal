@@ -12,7 +12,9 @@ Exposed-modules:    Data.Morphosyntax.Canonical
 		    Data.Morphosyntax.Tagset
 		    Text.Morphosyntax.Plain
 		    Text.Morphosyntax.Tag
+		    Text.Morphosyntax.Tagset
 Build-Depends:      base
                   , containers
                   , text
+                  , parsec
                   , binary
