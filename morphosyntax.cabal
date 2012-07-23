@@ -1,0 +1,18 @@
+Name:               morphosyntax
+Version:            0.0.1
+Synopsis:           Morphosyntax layer
+License:            BSD3
+License-file:       LICENSE
+Author:             Jakub Waszczuk
+Maintainer:         waszczuk.kuba@gmail.com
+Build-type:         Simple
+Exposed-modules:    Data.Morphosyntax.Canonical
+		    Data.Morphosyntax.Class
+		    Data.Morphosyntax.Raw
+		    Data.Morphosyntax.Tagset
+		    Text.Morphosyntax.Plain
+		    Text.Morphosyntax.Tag
+Build-Depends:      base
+                  , containers
+                  , text
+                  , binary
