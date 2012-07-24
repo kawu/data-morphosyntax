@@ -4,33 +4,39 @@
 module Text.Morphosyntax.Plain
 ( parsePlain
 , parseSent
+, parsePlainR
+, parseSentR
 ) where
 
 import Data.Maybe (catMaybes)
 import Data.List (groupBy, intercalate)
 import qualified Data.Text.Lazy as L
 
-import Data.Morphosyntax.Canonical (Space (..))
-import qualified Data.Morphosyntax.Raw as M
+import Data.Morphosyntax.Base (Space (..))
+import Data.Morphosyntax.Tagset (Tagset)
+import qualified Data.Morphosyntax.Raw as Raw
+import qualified Data.Morphosyntax.Canonical as Cano
 
-type Sent   = [(M.Word, M.Disamb)]
+parsePlain :: Tagset -> L.Text -> [Cano.SentMlt]
+parsePlain tagset = map (Raw.toCanoSentMlt tagset) . parsePlainR
 
-parsePlain :: L.Text -> [Sent]
-parsePlain = map parseSent . init . L.splitOn "\n\n"
+parseSent :: Tagset -> L.Text -> Cano.SentMlt
+parseSent tagset = Raw.toCanoSentMlt tagset . parseSentR
 
-parseSent :: L.Text -> Sent
-parseSent
+parsePlainR :: L.Text -> [Raw.SentMlt]
+parsePlainR = map parseSentR . init . L.splitOn "\n\n"
+
+parseSentR :: L.Text -> Raw.SentMlt
+parseSentR
     = map parseWord
     . groupBy (\_ x -> pred x)
     . L.lines
   where
     pred = ("\t" `L.isPrefixOf`)
 
-parseWord :: [L.Text] -> (M.Word, M.Disamb)
-parseWord xs
-    | length choice == 1 = (M.Word orth space forms, head choice)
-    | otherwise = error $ "parseWord: ambiguous choice in:\n"
-        ++ intercalate "\n" (map L.unpack xs)
+parseWord :: [L.Text] -> (Raw.Word, Raw.Multi)
+parseWord xs =
+    (Raw.Word orth space forms, choice)
   where
     (orth, space) = parseHeader (head xs)
 
@@ -39,17 +45,18 @@ parseWord xs
         then []
         else map fst $ catMaybes ys
 
-    choice = [y | (y, True) <- catMaybes ys]
+    choice = [(y, prob) | (y, True) <- catMaybes ys]
+    prob = 1 / fromIntegral (length choice)
 
-parseInterp :: L.Text -> Maybe (M.Interp, Bool)
+parseInterp :: L.Text -> Maybe (Raw.Interp, Bool)
 parseInterp =
     doIt . tail . L.splitOn "\t"
   where
     doIt [form, "ign"] = Nothing
     doIt [form, tag] = Just $
-        (M.Interp form tag, False)
+        (Raw.Interp form tag, False)
     doIt [form, tag, "disamb"] = Just $
-        (M.Interp form tag, True)
+        (Raw.Interp form tag, True)
     doIt xs = error $ "parseInterp: " ++ show xs
 
 parseHeader :: L.Text -> (L.Text, Space)

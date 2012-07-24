@@ -2,20 +2,29 @@ module Data.Morphosyntax.Raw
 ( Word (..)
 , Interp (..)
 , Disamb
-, toCano
+, Multi
+, word
+, choice
+
+, Sent
+, SentDmb
+, SentMlt
+
+, toCanoWord
 , toCanoSent
-, toCanoData
+, toCanoSentDmb
+, toCanoSentMlt
 ) where
 
 import qualified Data.Text.Lazy as L
 
-import qualified Data.Morphosyntax.Canonical as C
+import qualified Data.Morphosyntax.Canonical as Cano
 import Data.Morphosyntax.Tagset (Tagset, Tag)
 import Text.Morphosyntax.Tag (parseTag)
 
 data Word = Word
     { orth    :: L.Text
-    , space   :: C.Space
+    , space   :: Cano.Space
     , interps :: [Interp] }
     deriving (Show, Read, Eq, Ord)
 
@@ -25,16 +34,37 @@ data Interp = Interp
     deriving (Show, Read, Eq, Ord)
 
 type Disamb = Interp
+type Multi  = [(Interp, Double)]    -- ^ Interpretations with probabilities
 
-toCano :: Tagset -> Word -> C.Word
-toCano tagset x =
-    C.Word (orth x) (space x) xs
-  where
-    xs = [ C.Interp (base x) (parseTag tagset $ tag x)
-         | x <- interps x ]
+type Sent       = [Word]
+type SentDmb    = [(Word, Disamb)]
+type SentMlt    = [(Word, Multi)]
 
-toCanoSent :: Tagset -> [Word] -> [C.Word]
-toCanoSent tagset = map (toCano tagset)
+word :: (Word, a) -> Word
+word = fst
 
-toCanoData :: Tagset -> [[Word]] -> [[C.Word]]
-toCanoData tagset = map (toCanoSent tagset)
+choice :: (Word, b) -> b
+choice = snd
+
+toCanoIntp :: Tagset -> Interp -> Cano.Interp
+toCanoIntp tagset x = Cano.Interp (base x) (parseTag tagset $ tag x)
+
+toCanoWord :: Tagset -> Word -> Cano.Word
+toCanoWord tagset x =
+    Cano.Word (orth x) (space x) (map (toCanoIntp tagset) (interps x))
+
+toCanoSent :: Tagset -> Sent -> Cano.Sent
+toCanoSent tagset = map (toCanoWord tagset)
+
+toCanoSentDmb :: Tagset -> SentDmb -> Cano.SentDmb
+toCanoSentDmb tagset xs =
+    [ ( toCanoWord tagset x
+      , toCanoIntp tagset dmb )
+    | (x, dmb) <- xs ]
+
+toCanoSentMlt :: Tagset -> SentMlt -> Cano.SentMlt
+toCanoSentMlt tagset xs =
+    [ ( toCanoWord tagset x
+      , [ (toCanoIntp tagset dmb, prob)
+        | (dmb, prob) <- mlt ] )
+    | (x, mlt) <- xs ]
