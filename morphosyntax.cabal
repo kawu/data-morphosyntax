@@ -1,12 +1,13 @@
 Name:               morphosyntax
-Version:            0.0.1
+Version:            0.0.1.1
 Synopsis:           Morphosyntax layer
 License:            BSD3
 License-file:       LICENSE
 Author:             Jakub Waszczuk
 Maintainer:         waszczuk.kuba@gmail.com
 Build-type:         Simple
-Exposed-modules:    Data.Morphosyntax.Base
+Exposed-modules:    Data.Morphosyntax
+                    Data.Morphosyntax.Base
                     Data.Morphosyntax.Canonical
 		    Data.Morphosyntax.Class
 		    Data.Morphosyntax.Raw

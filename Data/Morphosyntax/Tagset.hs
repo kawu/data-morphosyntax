@@ -12,7 +12,7 @@ module Data.Morphosyntax.Tagset
 ) where
 
 import Control.Monad (liftM2)
-import Control.Applicative ((<$>))
+import Control.Applicative ((<$>), (<*>))
 import qualified Data.Text.Lazy as L
 import qualified Data.Text.Lazy.Encoding as L
 import qualified Data.Map as M
@@ -29,6 +29,7 @@ data Tagset = Tagset
     , rules     :: M.Map POS  [(Attr, Optional)]
     } deriving (Show)
 
+-- | FIXME: Move to separate module.
 instance Binary L.Text where
     put = put . L.encodeUtf8
     get = L.decodeUtf8 <$> get
@@ -54,3 +55,7 @@ data Tag = Tag
     { pos   :: POS
     , atts  :: M.Map Attr AttrVal
     } deriving (Show, Read, Eq, Ord)
+
+instance Binary Tag where
+    put Tag{..} = put pos >> put atts
+    get = Tag <$> get <*> get

@@ -64,7 +64,7 @@ secName name = char '[' *> string name *> char ']'
 parseTagset :: String -> String -> Tagset
 parseTagset src contents = do
     case parse tagsetFile src filtered of
-        Left e  -> error $ "Error parsing input:\n" ++ show e
+        Left e  -> error $ "parseTagset: Error parsing input:\n" ++ show e
         Right r -> r
   where
      filtered = unlines $ map (removeComment '#') $ lines contents

@@ -22,3 +22,8 @@ parseTag tagset inp =
         | otherwise     = error $ "parseRule:"
             ++ " no value for " ++ L.unpack attr
             ++ " attribute in tag " ++ L.unpack inp
+    parseRule [] [] = []
+    parseRule as [] = error $ "parseRule: unexpected end of input in tag "
+        ++ L.unpack inp
+    parseRule [] xs = error $ "parseRule: input too long in tag "
+        ++ L.unpack inp
