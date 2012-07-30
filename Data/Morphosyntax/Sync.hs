@@ -14,42 +14,28 @@ import Data.Morphosyntax.Canonical
 import Data.Morphosyntax.Compare (align)
 import Data.Morphosyntax.Tagset (tagSim)
 
-type Logger = Writer [String]
+import Debug.Trace (trace)
 
 -- | Synchronize two data sets, taking disamb tags from the first one
 -- and the rest form the second one.
-sync :: [SentMlt] -> [SentMlt] -> Logger [SentMlt]
-sync xs ys = 
-    segment segm . concat <$> mapM (uncurry syncWord) zs
+sync :: [WordMlt] -> [WordMlt] -> [WordMlt]
+sync xs ys = concatMap (uncurry syncWord) (align xs ys)
+
+syncWord :: [WordMlt] -> [WordMlt] -> [WordMlt]
+syncWord [x] [y] =
+    let mlt = mergeMulti (choice x) (interps $ word y)
+    in  [(word y, mlt)]
   where
-    -- | Sentence-level segmentation.
-    segm = map length ys
-    zs = align (concat xs) (concat ys)
+syncWord xs ys = trace "syncWord xs" xs
 
-syncWord :: [WordMlt] -> [WordMlt] -> Logger [WordMlt]
-syncWord [x] [y] = do
-    mlt <- censor (map info) (mergeMulti (choice x) (interps $ word y))
-    return [(word y, mlt)]
-  where
-    form = L.unpack . orth . word
-    info log = "word: " ++ form x ++ " " ++ log
-syncWord xs ys = do
-    tell ["multi: " ++ show xs]
-    return xs
+mergeMulti :: Multi -> [Interp] -> Multi
+mergeMulti mlt xs = concatMap (mergeDisamb xs) mlt
 
-mergeMulti :: Multi -> [Interp] -> Logger Multi
-mergeMulti mlt xs = concat <$> mapM (mergeDisamb xs) mlt
-
-mergeDisamb :: [Interp] -> (Interp, Double) -> Logger [(Interp, Double)]
+mergeDisamb :: [Interp] -> (Interp, Double) -> [(Interp, Double)]
 mergeDisamb xs (x, pr)
-    | Just x' <- find (==x) xs = return [(x, pr)]
-    | otherwise = do
-        tell ["choice not in interp list"]
+    | Just x' <- find (==x) xs = [(x, pr)]
+    | otherwise =
         let sim = maximum $ map (tagSim (tag x) . tag) xs
             res = [(y, pr') | y <- xs, tagSim (tag x) (tag y) == sim]
             pr' = pr / fromIntegral (length res)
-        return res
-
-segment :: [Int] -> [a] -> [[a]]
-segment (n:ns) xs = take n xs : segment ns (drop n xs)
-segment [] [] = []
+        in  res

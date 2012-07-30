@@ -10,8 +10,20 @@ import Data.Morphosyntax.Sync
 main = do
     [tagsetPath, goldPath, otherPath, resPath] <- getArgs
     tagset <- parseTagset tagsetPath <$> readFile tagsetPath
-    xs <- parsePlain tagset <$> L.readFile goldPath
-    ys <- parsePlain tagset <$> L.readFile otherPath
-    let (zs, log) = runWriter (sync xs ys)
-    L.writeFile resPath (showPlain tagset zs)
-    mapM_ putStrLn log
+
+    let readData path = parsePlain tagset <$> L.readFile path
+
+    -- | Sentence level segmentation.
+    segm <- map length <$> readData otherPath
+
+    xs <- concat <$> readData goldPath
+    ys <- concat <$> readData otherPath
+    let zs = sync xs ys
+
+    L.writeFile resPath (showPlain tagset $ segment segm zs)
+
+segment :: [Int] -> [a] -> [[a]]
+segment (n:ns) xs = 
+    let (first, rest) = splitAt n xs 
+    in  first : segment ns rest
+segment [] [] = []
