@@ -12,6 +12,7 @@ Exposed-modules:    Data.Morphosyntax
 		    Data.Morphosyntax.Class
 		    Data.Morphosyntax.Raw
 		    Data.Morphosyntax.Tagset
+		    Data.Morphosyntax.Compare
 		    Text.Morphosyntax.Plain
 		    Text.Morphosyntax.Tag
 		    Text.Morphosyntax.Tagset
