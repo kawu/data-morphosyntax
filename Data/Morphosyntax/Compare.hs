@@ -17,9 +17,9 @@ import qualified Data.Morphosyntax.Base as Base
 import qualified Data.Morphosyntax.Canonical as Cano
 import qualified Data.Morphosyntax.Tagset as Tag
 
-type WordMlt = (Cano.Word, Base.Multi)
+type WordMlt = Cano.WordMlt
 
-orth :: WordMlt -> L.Text
+orth :: Cano.WordMlt -> L.Text
 orth = Cano.orth . fst
 
 -- | All tags are expanded here. 

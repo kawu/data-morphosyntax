@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE PatternGuards #-}
 
@@ -12,6 +13,7 @@ module Data.Morphosyntax.Tagset
 
 , Tag (..)
 , expand
+, tagSim
 ) where
 
 import Control.Monad (liftM2)
@@ -75,3 +77,13 @@ expand tagset tag = do
     attrVal (attr, True)
         | Just x <- M.lookup attr (atts tag) = [x]
         | otherwise = S.toList $ domain tagset attr
+
+-- | Measure of similarity between two tags.
+tagSim :: Tag -> Tag -> Int
+tagSim t t'
+    = S.size (xs `S.intersection` xs')
+    -- - S.length (xs -|- xs')
+  where
+    xs  = S.fromList (("pos", pos t)  : M.assocs (atts t))
+    xs' = S.fromList (("pos", pos t') : M.assocs (atts t'))
+    -- (-|-) x y = (x \\ y) `S.union` (y \\ x) -- ^ Symetric difference

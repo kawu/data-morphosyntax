@@ -13,6 +13,7 @@ Exposed-modules:    Data.Morphosyntax
 		    Data.Morphosyntax.Raw
 		    Data.Morphosyntax.Tagset
 		    Data.Morphosyntax.Compare
+		    Data.Morphosyntax.Sync
 		    Text.Morphosyntax.Plain
 		    Text.Morphosyntax.Tag
 		    Text.Morphosyntax.Tagset
@@ -21,3 +22,4 @@ Build-Depends:      base
                   , text
                   , parsec
                   , binary
+		  , mtl

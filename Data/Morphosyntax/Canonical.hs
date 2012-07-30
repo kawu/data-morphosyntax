@@ -4,6 +4,9 @@ module Data.Morphosyntax.Canonical
 , word
 , choice
 
+, WordDmb
+, WordMlt
+
 , Sent
 , SentDmb
 , SentMlt
@@ -25,9 +28,12 @@ instance C.Morph Word where
     space   = space
     interps = interps
 
+type WordDmb = (Word, Disamb)
+type WordMlt = (Word, Multi)
+
 type Sent       = [Word]
-type SentDmb    = [(Word, Disamb)]
-type SentMlt    = [(Word, Multi)]
+type SentDmb    = [WordDmb]
+type SentMlt    = [WordMlt]
 
 word :: (Word, a) -> Word
 word = fst
