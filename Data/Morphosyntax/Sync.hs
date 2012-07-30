@@ -26,7 +26,9 @@ syncWord [x] [y] =
     let mlt = mergeMulti (choice x) (interps $ word y)
     in  [(word y, mlt)]
   where
-syncWord xs ys = trace "syncWord xs" xs
+syncWord xs ys =
+    let info = "WARNING: xs = " ++ concatMap (L.unpack.orth.word) xs
+    in  trace info xs
 
 mergeMulti :: Multi -> [Interp] -> Multi
 mergeMulti mlt xs = concatMap (mergeDisamb xs) mlt
