@@ -1,4 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE PatternGuards #-}
 
 module Data.Morphosyntax.Tagset
 ( Tagset (..)
@@ -8,7 +9,9 @@ module Data.Morphosyntax.Tagset
 , Optional
 , domain
 , rule
+
 , Tag (..)
+, expand
 ) where
 
 import Control.Monad (liftM2)
@@ -59,3 +62,16 @@ data Tag = Tag
 instance Binary Tag where
     put Tag{..} = put pos >> put atts
     get = Tag <$> get <*> get
+
+-- | Expand tag optional attributes.
+expand :: Tagset -> Tag -> [Tag]
+expand tagset tag = do
+    values <- sequence (map attrVal rl)
+    let attrMap = M.fromList $ zip (map fst rl) values
+    return $ Tag (pos tag) attrMap
+  where
+    rl = rule tagset (pos tag)
+    attrVal (attr, False) = [atts tag M.! attr]
+    attrVal (attr, True)
+        | Just x <- M.lookup attr (atts tag) = [x]
+        | otherwise = S.toList $ domain tagset attr
