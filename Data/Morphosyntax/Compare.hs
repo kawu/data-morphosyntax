@@ -1,7 +1,7 @@
 module Data.Morphosyntax.Compare
 ( Stats (..)
 , stats
-, accuracyLB
+, weakAccuracyLB
 , align
 ) where
 
@@ -19,8 +19,15 @@ type WordMlt = (Cano.Word, Base.Multi)
 orth :: WordMlt -> L.Text
 orth = Cano.orth . fst
 
-choice :: WordMlt -> S.Set Tag.Tag
-choice = S.fromList . map (Base.tag . fst) . snd
+-- | All tags are exanded here. 
+choice :: Tag.Tagset -> WordMlt -> S.Set Tag.Tag
+choice tagset
+--     = S.fromList
+--     . map (Base.tag . fst)
+--     . snd
+    = S.fromList
+    . concatMap (Tag.expand tagset . Base.tag . fst)
+    . snd
 
 align :: [WordMlt] -> [WordMlt] -> [([WordMlt], [WordMlt])]
 align [] [] = []
@@ -52,8 +59,9 @@ data Stats = Stats
 (.+.) :: Stats -> Stats -> Stats
 Stats x y .+. Stats x' y' = Stats (x + x') (y + y')
 
-accuracyLB :: Stats -> Double
-accuracyLB s
+-- | Lower bound for weak accuracy.
+weakAccuracyLB :: Stats -> Double
+weakAccuracyLB s
     = fromIntegral (good s)
     / fromIntegral (gold s)
 
@@ -61,11 +69,16 @@ accuracyLB s
 -- If you want to compute accuracy for two data sets (list
 -- of sentences), just concatenate them. Errors on the level
 -- of sentence segmentation are not taken on account.
-stats :: [WordMlt] -> [WordMlt] -> Stats
-stats xs ys =
+stats :: Tag.Tagset -> [WordMlt] -> [WordMlt] -> Stats
+stats tagset xs ys =
     foldl' (.+.) (Stats 0 0) . map (uncurry stats) $ align xs ys
   where
     stats [x] [y]
-        | choice x == choice y = Stats 1 1
-        | otherwise = Stats 0 1
+        | S.null (xTags `S.intersection` yTags) = Stats 0 1
+        | otherwise = Stats 1 1
+--         | xTags == yTags = Stats 1 1
+--         | otherwise = Stats 0 1
+      where
+        xTags = choice tagset x
+        yTags = choice tagset y
     stats xs ys = Stats 0 (length xs)

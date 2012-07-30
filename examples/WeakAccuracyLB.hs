@@ -14,7 +14,7 @@ main = do
     tagset <- parseTagset tagsetPath <$> readFile tagsetPath
     xs <- concat . parsePlain tagset <$> L.readFile goldPath
     ys <- concat . parsePlain tagset <$> L.readFile otherPath
-    let s = stats xs ys
+    let s = stats tagset xs ys
     putStrLn $ "number of words in gold part: " ++ show (gold s)
     putStrLn $ "number of correct tags: " ++ show (good s)
-    putStrLn $ "accuracy lower bound: " ++ show (accuracyLB s)
+    putStrLn $ "weak accuracy lower bound: " ++ show (weakAccuracyLB s)
