@@ -1,7 +1,10 @@
 module Data.Morphosyntax.Compare
 ( Stats (..)
-, stats
-, weakAccuracyLB
+, weakLB
+, weakUB
+, strongLB
+, strongUB
+, accuracy
 , align
 ) where
 
@@ -19,12 +22,9 @@ type WordMlt = (Cano.Word, Base.Multi)
 orth :: WordMlt -> L.Text
 orth = Cano.orth . fst
 
--- | All tags are exanded here. 
+-- | All tags are expanded here. 
 choice :: Tag.Tagset -> WordMlt -> S.Set Tag.Tag
 choice tagset
---     = S.fromList
---     . map (Base.tag . fst)
---     . snd
     = S.fromList
     . concatMap (Tag.expand tagset . Base.tag . fst)
     . snd
@@ -59,26 +59,55 @@ data Stats = Stats
 (.+.) :: Stats -> Stats -> Stats
 Stats x y .+. Stats x' y' = Stats (x + x') (y + y')
 
--- | Lower bound for weak accuracy.
-weakAccuracyLB :: Stats -> Double
-weakAccuracyLB s
+accuracy :: Stats -> Double
+accuracy s
     = fromIntegral (good s)
     / fromIntegral (gold s)
 
--- | Accuracy lower bound. We ignore lemmatization errors.
--- If you want to compute accuracy for two data sets (list
--- of sentences), just concatenate them. Errors on the level
--- of sentence segmentation are not taken on account.
-stats :: Tag.Tagset -> [WordMlt] -> [WordMlt] -> Stats
-stats tagset xs ys =
+weakLB :: Tag.Tagset -> [WordMlt] -> [WordMlt] -> Stats
+weakLB tagset xs ys =
     foldl' (.+.) (Stats 0 0) . map (uncurry stats) $ align xs ys
   where
     stats [x] [y]
         | S.null (xTags `S.intersection` yTags) = Stats 0 1
         | otherwise = Stats 1 1
---         | xTags == yTags = Stats 1 1
---         | otherwise = Stats 0 1
       where
         xTags = choice tagset x
         yTags = choice tagset y
     stats xs ys = Stats 0 (length xs)
+
+strongLB :: Tag.Tagset -> [WordMlt] -> [WordMlt] -> Stats
+strongLB tagset xs ys =
+    foldl' (.+.) (Stats 0 0) . map (uncurry stats) $ align xs ys
+  where
+    stats [x] [y]
+        | xTags == yTags = Stats 1 1
+        | otherwise = Stats 0 1
+      where
+        xTags = choice tagset x
+        yTags = choice tagset y
+    stats xs ys = Stats 0 (length xs)
+
+weakUB :: Tag.Tagset -> [WordMlt] -> [WordMlt] -> Stats
+weakUB tagset xs ys =
+    foldl' (.+.) (Stats 0 0) . map (uncurry stats) $ align xs ys
+  where
+    stats [x] [y]
+        | S.null (xTags `S.intersection` yTags) = Stats 0 1
+        | otherwise = Stats 1 1
+      where
+        xTags = choice tagset x
+        yTags = choice tagset y
+    stats xs ys = Stats (length xs) (length xs)
+
+strongUB :: Tag.Tagset -> [WordMlt] -> [WordMlt] -> Stats
+strongUB tagset xs ys =
+    foldl' (.+.) (Stats 0 0) . map (uncurry stats) $ align xs ys
+  where
+    stats [x] [y]
+        | xTags == yTags = Stats 1 1
+        | otherwise = Stats 0 1
+      where
+        xTags = choice tagset x
+        yTags = choice tagset y
+    stats xs ys = Stats (length xs) (length xs)
