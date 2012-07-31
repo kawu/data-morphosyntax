@@ -14,7 +14,7 @@ main = do
     let readData path = parsePlain tagset <$> L.readFile path
 
     -- | Sentence level segmentation.
-    segm <- map length <$> readData otherPath
+    segm <- map length <$> readData goldPath
 
     xs <- concat <$> readData goldPath
     ys <- concat <$> readData otherPath
