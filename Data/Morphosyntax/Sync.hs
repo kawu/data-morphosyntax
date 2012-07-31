@@ -5,6 +5,7 @@ module Data.Morphosyntax.Sync
 ) where
 
 import qualified Data.Text.Lazy as L
+import qualified Data.Set as S
 import Control.Applicative ((<$>))
 import Control.Monad.Writer
 import Data.List (find)
@@ -12,32 +13,26 @@ import Data.List (find)
 import Data.Morphosyntax.Base
 import Data.Morphosyntax.Canonical
 import Data.Morphosyntax.Compare (align)
-import Data.Morphosyntax.Tagset (tagSim)
-
-import Debug.Trace (trace)
+import Data.Morphosyntax.Tagset (Tagset, tagSim, expand)
 
 -- | Synchronize two data sets, taking disamb tags from the first one
 -- and the rest form the second one.
-sync :: [WordMlt] -> [WordMlt] -> [WordMlt]
-sync xs ys = concatMap (uncurry syncWord) (align xs ys)
+sync :: Tagset -> [WordMlt] -> [WordMlt] -> [WordMlt]
+sync tagset xs ys = concatMap (uncurry (syncWord tagset)) (align xs ys)
 
-syncWord :: [WordMlt] -> [WordMlt] -> [WordMlt]
-syncWord [x] [y] =
-    let mlt = mergeMulti (choice x) (interps $ word y)
-    in  [(word y, mlt)]
+syncWord :: Tagset -> [WordMlt] -> [WordMlt] -> [WordMlt]
+
+syncWord tagset [v] [w] =
+    [(word w, mlt)]
   where
-syncWord xs ys =
-    let info = "WARNING: xs = " ++ concatMap (L.unpack.orth.word) xs
-    in  trace info xs
+    mlt = mergeMulti (interps $ word w) (choice v)
+    mergeMulti xs = concatMap (mergeDisamb xs)
+    mergeDisamb xs (x, pr)
+        | Just x' <- find ( ==x) xs = [(x', pr)]    -- ^ Exact match
+        | Just x' <- find (~==x) xs = [(x', pr)]    -- ^ Expanded tag match
+        | otherwise                 = [(x , pr)]    -- ^ Controversial
+      where
+        x ~== y = S.size (label x `S.intersection` label y) > 0
+        label   = S.fromList . expand tagset . tag
 
-mergeMulti :: Multi -> [Interp] -> Multi
-mergeMulti mlt xs = concatMap (mergeDisamb xs) mlt
-
-mergeDisamb :: [Interp] -> (Interp, Double) -> [(Interp, Double)]
-mergeDisamb xs (x, pr)
-    | Just x' <- find (==x) xs = [(x, pr)]
-    | otherwise =
-        let sim = maximum $ map (tagSim (tag x) . tag) xs
-            res = [(y, pr') | y <- xs, tagSim (tag x) (tag y) == sim]
-            pr' = pr / fromIntegral (length res)
-        in  res
+syncWord tagset xs ys = xs

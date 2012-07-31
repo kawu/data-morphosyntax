@@ -18,7 +18,7 @@ main = do
 
     xs <- concat <$> readData goldPath
     ys <- concat <$> readData otherPath
-    let zs = sync xs ys
+    let zs = sync tagset xs ys
 
     L.writeFile resPath (showPlain tagset $ segment segm zs)
 

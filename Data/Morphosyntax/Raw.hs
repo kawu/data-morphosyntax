@@ -25,6 +25,7 @@ import Text.Morphosyntax.Tag (parseTag)
 data Word = Word
     { orth    :: L.Text
     , space   :: Cano.Space
+    , known   :: Bool
     , interps :: [Interp] }
     deriving (Show, Read, Eq, Ord)
 
@@ -51,7 +52,8 @@ toCanoIntp tagset x = Cano.Interp (base x) (parseTag tagset $ tag x)
 
 toCanoWord :: Tagset -> Word -> Cano.Word
 toCanoWord tagset x =
-    Cano.Word (orth x) (space x) (map (toCanoIntp tagset) (interps x))
+    Cano.Word (orth x) (space x) (known x)
+        (map (toCanoIntp tagset) (interps x))
 
 toCanoSent :: Tagset -> Sent -> Cano.Sent
 toCanoSent tagset = map (toCanoWord tagset)

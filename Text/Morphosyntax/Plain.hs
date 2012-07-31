@@ -44,14 +44,13 @@ parseSentR
 
 parseWord :: [L.Text] -> (Raw.Word, Raw.Multi)
 parseWord xs =
-    (Raw.Word orth space forms, choice)
+    (Raw.Word orth space known forms, choice)
   where
     (orth, space) = parseHeader (head xs)
 
     ys = map parseInterp (tail xs)
-    forms = if Nothing `elem` ys
-        then []
-        else map fst $ catMaybes ys
+    known = not (Nothing `elem` ys)
+    forms = map fst (catMaybes ys)
 
     choice = [(y, prob) | (y, True) <- catMaybes ys]
     prob = 1 / fromIntegral (length choice)
@@ -76,6 +75,7 @@ parseSpace :: L.Text -> Space
 parseSpace "none"    = NoSpace
 parseSpace "space"   = Space
 parseSpace "newline" = NewLine
+parseSpace "newlines" = NewLine -- ^ TODO: Remove this temporary fix
 parseSpace xs        = error ("parseSpace: " ++ L.unpack xs)
 
 -- | Printing.
@@ -102,6 +102,7 @@ buildWord :: Tagset -> (Cano.Word, Cano.Multi) -> L.Builder
 buildWord tagset (word, multi)
     =  L.fromLazyText (Cano.orth word) <> "\t"
     <> buildSpace (Cano.space word) <> "\n"
+    <> buildKnown (Cano.known word)
     <> buildInterps tagset multi interps
   where
     -- | We hadle the special case here, when the set of choices
@@ -127,3 +128,7 @@ buildSpace :: Cano.Space -> L.Builder
 buildSpace NoSpace  = "none"
 buildSpace Space    = "space"
 buildSpace NewLine  = "newline"
+
+buildKnown :: Bool -> L.Builder
+buildKnown True     = ""
+buildKnown False    = "\tNone\tign\n"

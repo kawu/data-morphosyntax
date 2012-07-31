@@ -1,7 +1,6 @@
 module Data.Morphosyntax.Class
 ( Morph (..)
 , Disamb (..)
-, known
 ) where
 
 import Control.Applicative
@@ -13,10 +12,8 @@ import Data.Morphosyntax.Base (Interp, Multi, Space)
 class Morph w where
     orth    :: w -> L.Text
     space   :: w -> Space
+    known   :: w -> Bool
     interps :: w -> [Interp]
-
-known :: Morph w => w -> Bool
-known = not . null . interps
 
 class Disamb w where
     disamb  :: w -> Interp
