@@ -1,45 +1,48 @@
+{-# LANGUAGE DeriveFunctor #-}
+
 module Data.Morphosyntax.Canonical
-( module Data.Morphosyntax.Base
-, Word (..)
-, word
-, choice
-
-, WordDmb
-, WordMlt
-
-, Sent
-, SentDmb
-, SentMlt
+( Word (..)
+, Space (..)
+, Interp (..)
+, Disamb (..)
+, disamb
 ) where
 
-import qualified Data.Text.Lazy as L
+import qualified Data.Text as T
+import Control.Applicative ((<$>), (<*>))
+import Data.List (maximumBy)
+import Data.Ord (comparing)
 
-import Data.Morphosyntax.Base
-import qualified Data.Morphosyntax.Class as C
-
-data Word = Word
-    { orth    :: L.Text
-    , space   :: Space
-    -- | Is the word known on the level of analysis?
-    , known   :: Bool
-    , interps :: [Interp] }
+data Space
+    = NoSpace
+    | Space
+    | NewLine
     deriving (Show, Read, Eq, Ord)
 
-instance C.Morph Word where
-    orth    = orth
-    space   = space
-    known   = known
-    interps = interps
+data Word t = Word
+    -- | Orthographic form.
+    { orth    :: T.Text
+    -- | Space before the word.
+    , space   :: Space
+    -- | Is this a known word?
+    , known   :: Bool
+    -- | List of word interpretations.
+    , interps :: [Interp t] }
+    deriving (Show, Read, Eq, Ord, Functor)
 
-type WordDmb = (Word, Disamb)
-type WordMlt = (Word, Multi)
+data Interp t = Interp
+    { base :: T.Text
+    , tag  :: t }
+    deriving (Show, Read, Eq, Ord, Functor)
 
-word :: (Word, a) -> Word
-word = fst
+-- | Disambiguated word.
+data Disamb t = Disamb
+    { word   :: Word t
+    -- | Single or multiple interpretations.
+    , choice :: [(Interp t, Double)] }
+    deriving (Show, Read, Eq, Ord, Functor)
 
-choice :: (Word, b) -> b
-choice = snd
-
-type Sent       = [Word]
-type SentDmb    = [WordDmb]
-type SentMlt    = [WordMlt]
+-- | Retrieve the most probable interpretation.
+disamb :: Disamb t -> Interp t
+disamb (Disamb _ []) = error "disamb: null choice" 
+disamb (Disamb _ xs) = fst $ maximumBy (comparing snd) xs

@@ -8,28 +8,27 @@ module Data.Morphosyntax.Compare
 , align
 ) where
 
-import qualified Data.Text.Lazy as L
+import qualified Data.Text as T
 import qualified Data.Set as S
 import Data.Char (isSpace)
 import Data.List (foldl')
 
-import qualified Data.Morphosyntax.Base as Base
 import qualified Data.Morphosyntax.Canonical as Cano
 import qualified Data.Morphosyntax.Tagset as Tag
 
-type WordMlt = Cano.WordMlt
+type Disamb = Cano.Disamb Tag.Tag
 
-orth :: Cano.WordMlt -> L.Text
-orth = Cano.orth . fst
+orth :: Disamb -> T.Text
+orth = Cano.orth . Cano.word
 
 -- | All tags are expanded here. 
-choice :: Tag.Tagset -> WordMlt -> S.Set Tag.Tag
+choice :: Tag.Tagset -> Disamb -> S.Set Tag.Tag
 choice tagset
     = S.fromList
-    . concatMap (Tag.expand tagset . Base.tag . fst)
-    . snd
+    . concatMap (Tag.expand tagset . Cano.tag . fst)
+    . Cano.choice
 
-align :: [WordMlt] -> [WordMlt] -> [([WordMlt], [WordMlt])]
+align :: [Disamb] -> [Disamb] -> [([Disamb], [Disamb])]
 align [] [] = []
 align [] ys = error "align: null xs, not null ys"
 align xs [] = error "align: not null xs, null ys"
@@ -37,7 +36,7 @@ align xs ys =
     let (x, y) = match xs ys
     in  (x, y) : align (drop (length x) xs) (drop (length y) ys)
     
-match :: [WordMlt] -> [WordMlt] -> ([WordMlt], [WordMlt])
+match :: [Disamb] -> [Disamb] -> ([Disamb], [Disamb])
 match xs ys =
     doIt 0 xs 0 ys
   where
@@ -48,7 +47,7 @@ match xs ys =
       where
         n = i + size x
         m = j + size y
-    size w = L.length . L.filter (not.isSpace) $ orth w
+    size w = T.length . T.filter (not.isSpace) $ orth w
     x <: (xs, ys) = (x:xs, ys)
     y >: (xs, ys) = (xs, y:ys)
 
@@ -64,7 +63,7 @@ accuracy s
     = fromIntegral (good s)
     / fromIntegral (gold s)
 
-weakLB :: Tag.Tagset -> [WordMlt] -> [WordMlt] -> Stats
+weakLB :: Tag.Tagset -> [Disamb] -> [Disamb] -> Stats
 weakLB tagset xs ys =
     foldl' (.+.) (Stats 0 0) . map (uncurry stats) $ align xs ys
   where
@@ -76,7 +75,7 @@ weakLB tagset xs ys =
         yTags = choice tagset y
     stats xs ys = Stats 0 (length xs)
 
-strongLB :: Tag.Tagset -> [WordMlt] -> [WordMlt] -> Stats
+strongLB :: Tag.Tagset -> [Disamb] -> [Disamb] -> Stats
 strongLB tagset xs ys =
     foldl' (.+.) (Stats 0 0) . map (uncurry stats) $ align xs ys
   where
@@ -88,7 +87,7 @@ strongLB tagset xs ys =
         yTags = choice tagset y
     stats xs ys = Stats 0 (length xs)
 
-weakUB :: Tag.Tagset -> [WordMlt] -> [WordMlt] -> Stats
+weakUB :: Tag.Tagset -> [Disamb] -> [Disamb] -> Stats
 weakUB tagset xs ys =
     foldl' (.+.) (Stats 0 0) . map (uncurry stats) $ align xs ys
   where
@@ -100,7 +99,7 @@ weakUB tagset xs ys =
         yTags = choice tagset y
     stats xs ys = Stats (length xs) (length xs)
 
-strongUB :: Tag.Tagset -> [WordMlt] -> [WordMlt] -> Stats
+strongUB :: Tag.Tagset -> [Disamb] -> [Disamb] -> Stats
 strongUB tagset xs ys =
     foldl' (.+.) (Stats 0 0) . map (uncurry stats) $ align xs ys
   where
