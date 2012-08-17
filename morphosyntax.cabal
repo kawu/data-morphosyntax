@@ -14,9 +14,15 @@ Exposed-modules:    Data.Morphosyntax
 		    Text.Morphosyntax.Plain
 		    Text.Morphosyntax.Tag
 		    Text.Morphosyntax.Tagset
+		    Text.Morphosyntax.TeiNCP
 Build-Depends:      base
                   , containers
                   , text
+                  , bytestring
                   , parsec
 		  , mtl
 		  , binary
+		  , polysoup
+		  , tar (== 0.3.*)
+		  , zlib
+		  , filepath

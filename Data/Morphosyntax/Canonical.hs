@@ -13,6 +13,9 @@ import Control.Applicative ((<$>), (<*>))
 import Data.List (maximumBy)
 import Data.Ord (comparing)
 
+-- | TODO: Perhaps better representation would divide
+-- interpretations between separate lexemes?
+
 data Space
     = NoSpace
     | Space
